@@ -1,0 +1,78 @@
+name: Terraform Plan, Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Terraform environment"
+        required: true
+        default: "prd"
+        type: choice
+        options:
+          - 'prd'
+
+      action:
+        description: "Terraform action"
+        required: true
+        default: "plan"
+        type: choice
+        options:
+          - plan
+          - apply
+
+permissions:
+  id-token: write  
+  contents: read
+
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.0
+
+        # INIT with S3 native locking
+      - name: Terraform Init
+        run: |
+          terraform init -reconfigure \
+            -backend-config="bucket=s3-arovita-${{ github.event.inputs.env }}-tf-bucket" \
+            -backend-config="key=${{ github.event.inputs.env }}/terraform.tfstate" \
+            -backend-config="region=ap-south-1" \
+            -backend-config="use_lockfile=true"
+
+    #   - name: Terraform Format
+    #     run: terraform fmt -check
+
+    #   - name: Terraform Validate
+    #     run: terraform validate
+
+      # 🔹 PLAN
+      - name: Terraform Plan
+        if: github.event.inputs.action == 'plan'
+        run: |
+          terraform plan \
+            -out=tfplan \
+            -var-file=env/${{ github.event.inputs.env }}.tfvars
+
+      # 🔹 APPLY
+      - name: Terraform Apply
+        if: github.event.inputs.action == 'apply'
+        run: terraform apply -auto-approve -var-file=env/${{ github.event.inputs.env }}.tfvars

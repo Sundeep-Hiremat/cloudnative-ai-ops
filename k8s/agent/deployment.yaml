@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubeops-agent-sa
+  namespace: default
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::ACCOUNT_ID:role/kubeops-ai-prd-cluster-agent-irsa"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeops-agent-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "events", "services", "configmaps", "namespaces"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods", "nodes"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubeops-agent-binding
+subjects:
+  - kind: ServiceAccount
+    name: kubeops-agent-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: kubeops-agent-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubeops-agent-config
+  namespace: default
+data:
+  ENVIRONMENT: "prd"
+  LOG_LEVEL: "INFO"
+  PROMETHEUS_URL: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"
+  ARGOCD_URL: "http://argocd-server.argocd.svc.cluster.local"
+  GITOPS_REPO: "https://github.com/Sundeep-Hiremat/cloudnative-ai-ops"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubeops-agent
+  namespace: default
+  labels:
+    app: kubeops-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubeops-agent
+  template:
+    metadata:
+      labels:
+        app: kubeops-agent
+    spec:
+      serviceAccountName: kubeops-agent-sa
+      containers:
+        - name: agent
+          image: ghcr.io/sundeep-hiremat/kubeops-agent:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: kubeops-agent-config
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubeops-agent-svc
+  namespace: default
+spec:
+  type: LoadBalancer
+  selector:
+    app: kubeops-agent
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http

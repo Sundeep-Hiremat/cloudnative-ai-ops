@@ -1,0 +1,43 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kubeops-sre-alerts
+  namespace: monitoring
+  labels:
+    role: alert-rules
+spec:
+  groups:
+    - name: kubeops-autonomous-rules
+      rules:
+        - alert: KubeContainerOOMKilled
+          expr: (kube_pod_container_status_terminated_reason{reason="OOMKilled"} > 0) or (rate(kube_pod_container_status_restarts_total[5m]) > 0 and container_memory_working_set_bytes / container_spec_memory_limit_bytes > 0.95)
+          for: 1m
+          labels:
+            severity: critical
+            team: platform-sre
+            autonomous_remediation: "enabled"
+          annotations:
+            summary: "Container in pod {{ $labels.pod }} was OOMKilled"
+            description: "Container {{ $labels.container }} in pod {{ $labels.pod }} exceeded memory limit and was terminated."
+
+        - alert: KubePodCrashLoopBackOff
+          expr: rate(kube_pod_container_status_restarts_total[5m]) * 60 > 2
+          for: 2m
+          labels:
+            severity: high
+            team: platform-sre
+            autonomous_remediation: "enabled"
+          annotations:
+            summary: "Pod {{ $labels.pod }} is in CrashLoopBackOff"
+            description: "Pod {{ $labels.pod }} is restarting frequently due to application or configuration error."
+
+        - alert: KubeCPUThrottlingHigh
+          expr: sum(increase(container_cpu_cfs_throttled_periods_total[5m])) by (container, pod, namespace) / sum(increase(container_cpu_cfs_periods_total[5m])) by (container, pod, namespace) > 0.5
+          for: 5m
+          labels:
+            severity: warning
+            team: platform-sre
+            autonomous_remediation: "enabled"
+          annotations:
+            summary: "High CPU throttling on {{ $labels.pod }}"
+            description: "{{ $labels.container }} in {{ $labels.pod }} is experiencing > 50% CPU throttling."

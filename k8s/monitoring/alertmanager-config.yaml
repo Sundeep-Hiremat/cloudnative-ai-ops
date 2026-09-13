@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: kubeops-alertmanager-config
+  namespace: monitoring
+spec:
+  route:
+    groupBy: ['alertname', 'namespace', 'pod']
+    groupWait: 10s
+    groupInterval: 30s
+    repeatInterval: 2h
+    receiver: 'kubeops-ai-agent-webhook'
+    routes:
+      - matchers:
+          - name: autonomous_remediation
+            value: 'enabled'
+        receiver: 'kubeops-ai-agent-webhook'
+  receivers:
+    - name: 'kubeops-ai-agent-webhook'
+      webhookConfigs:
+        - url: 'http://kubeops-agent-service.default.svc.cluster.local:8000/api/webhook/alertmanager'
+          sendResolved: true

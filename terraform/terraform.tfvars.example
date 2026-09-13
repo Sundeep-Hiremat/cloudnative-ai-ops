@@ -1,0 +1,9 @@
+aws_region          = "us-east-1"
+environment         = "production"
+cluster_name        = "kubeops-ai-cluster"
+cluster_version     = "1.30"
+vpc_cidr            = "10.0.0.0/16"
+node_instance_types = ["t3.medium", "t3a.medium"]
+desired_node_count  = 3
+min_node_count      = 2
+max_node_count      = 6

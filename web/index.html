@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KubeOps-Aegis | Autonomous SRE & GitOps AI Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="glow-bg"></div>
+
+  <!-- Header -->
+  <header class="navbar glass">
+    <div class="logo-group">
+      <div class="logo-icon">⚡</div>
+      <div>
+        <h1 class="logo-title">KubeOps<span class="gradient-text">-Aegis</span></h1>
+        <p class="logo-subtitle">Autonomous SRE & GitOps Agent</p>
+      </div>
+    </div>
+
+    <div class="metrics-bar">
+      <div class="metric-item">
+        <span class="metric-label">Autonomous MTTR</span>
+        <span class="metric-value text-accent" id="metric-mttr">45s</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">Self-Healing Rate</span>
+        <span class="metric-value text-success" id="metric-rate">98.4%</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">Active Incidents</span>
+        <span class="metric-value text-warning" id="metric-active">0</span>
+      </div>
+    </div>
+
+    <div class="status-indicator glass-pill">
+      <span class="pulse-dot"></span>
+      <span id="ws-status">Live Connected</span>
+    </div>
+  </header>
+
+  <!-- Chaos Controls Bar -->
+  <section class="chaos-banner glass">
+    <div class="chaos-title-group">
+      <span class="badge badge-danger">Chaos Simulator</span>
+      <span class="chaos-desc">Inject live production failures to watch LangGraph agents triage, diagnose & self-heal via ArgoCD:</span>
+    </div>
+    <div class="chaos-actions">
+      <button class="btn btn-chaos" onclick="triggerChaos('oom')">💥 Inject OOMKilled</button>
+      <button class="btn btn-chaos" onclick="triggerChaos('crashloop')">🔄 Inject CrashLoopBackOff</button>
+      <button class="btn btn-chaos" onclick="triggerChaos('throttling')">🔥 Inject CPU Throttling</button>
+    </div>
+  </section>
+
+  <!-- Main Grid Layout -->
+  <main class="dashboard-grid">
+    <!-- Column 1: Incident Feed -->
+    <section class="card glass incident-feed-col">
+      <div class="card-header">
+        <h2 class="card-title">🚨 Real-Time Incidents</h2>
+        <span class="badge badge-neutral" id="incident-count">0 total</span>
+      </div>
+      <div class="incident-list" id="incident-list">
+        <div class="empty-state">
+          <div class="empty-icon">🛡️</div>
+          <p>No active incidents. Cluster is healthy.</p>
+          <small>Click one of the Chaos buttons above to trigger a demo incident.</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- Column 2: LangGraph Multi-Agent Execution Flow -->
+    <section class="card glass agent-flow-col">
+      <div class="card-header">
+        <h2 class="card-title">🧠 Multi-Agent State Machine</h2>
+        <span class="badge badge-info" id="agent-active-badge">Idle</span>
+      </div>
+
+      <!-- Graph Visualizer Nodes -->
+      <div class="graph-nodes-container">
+        <div class="node-pill" id="node-triage">
+          <span class="node-icon">🔍</span>
+          <span class="node-title">1. Triage Agent</span>
+        </div>
+        <div class="node-arrow">→</div>
+        <div class="node-pill" id="node-diagnostic">
+          <span class="node-icon">🔬</span>
+          <span class="node-title">2. Diagnostic Agent</span>
+        </div>
+        <div class="node-arrow">→</div>
+        <div class="node-pill" id="node-remediation">
+          <span class="node-icon">🛠️</span>
+          <span class="node-title">3. Remediation Agent</span>
+        </div>
+        <div class="node-arrow">→</div>
+        <div class="node-pill" id="node-gitops">
+          <span class="node-icon">📦</span>
+          <span class="node-title">4. GitOps PR</span>
+        </div>
+        <div class="node-arrow">→</div>
+        <div class="node-pill" id="node-verification">
+          <span class="node-icon">✅</span>
+          <span class="node-title">5. ArgoCD Verify</span>
+        </div>
+      </div>
+
+      <!-- Live Agent Logs & Thoughts -->
+      <div class="timeline-container">
+        <h3 class="section-heading">Agent Activity Stream</h3>
+        <div class="timeline-list" id="timeline-list">
+          <div class="log-item info">
+            <span class="log-time">00:00:00</span>
+            <span class="log-agent">[KubeOps-Aegis]</span>
+            <span class="log-text">Agentic SRE daemon ready for Prometheus / K8s alerts.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Column 3: GitOps PR, Diff Viewer & Approval -->
+    <section class="card glass pr-approval-col">
+      <div class="card-header">
+        <h2 class="card-title">📋 GitOps PR & Human-in-the-Loop</h2>
+        <span class="badge badge-warning" id="approval-badge">No Pending PR</span>
+      </div>
+
+      <div class="approval-panel-body" id="approval-panel">
+        <div class="empty-state">
+          <div class="empty-icon">🌿</div>
+          <p>No pending GitOps approvals.</p>
+          <small>Proposed manifest diffs and PR approvals will appear here.</small>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
