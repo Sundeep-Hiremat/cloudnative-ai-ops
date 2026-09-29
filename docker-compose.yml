@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # Local PostgreSQL Database Container
+  postgres:
+    image: postgres:15-alpine
+    container_name: order_mgmt_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ordersdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ordersdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend Microservice Container
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: order_mgmt_backend
+    restart: always
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ordersdb
+      DB_USER: postgres
+      DB_PASSWORD: postgrespassword
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Lightweight Nginx Frontend Container
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    container_name: order_mgmt_frontend
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

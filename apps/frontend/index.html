@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Management System | EKS Platform App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="background-glow"></div>
+
+  <header class="navbar">
+    <div class="logo">
+      <span class="logo-icon">📦</span>
+      <div>
+        <h1>Order Manager</h1>
+        <p class="subtitle">Cloud Native Kubernetes Platform App</p>
+      </div>
+    </div>
+    <div class="status-group">
+      <div class="status-pill" id="health-status">
+        <span class="dot yellow"></span> Checking Health...
+      </div>
+      <div class="status-pill" id="ready-status">
+        <span class="dot yellow"></span> Checking DB...
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Form Section -->
+    <section class="card form-card">
+      <h2>🛒 Create New Order</h2>
+      <form id="create-order-form">
+        <div class="form-group">
+          <label for="customer_name">Customer Name</label>
+          <input type="text" id="customer_name" required placeholder="e.g. Sundeep Hiremath" />
+        </div>
+        <div class="form-group">
+          <label for="item_name">Item Name</label>
+          <input type="text" id="item_name" required placeholder="e.g. AWS EKS Masterclass" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="quantity">Quantity</label>
+            <input type="number" id="quantity" value="1" min="1" required />
+          </div>
+          <div class="form-group">
+            <label for="total_price">Total Price ($)</label>
+            <input type="number" id="total_price" step="0.01" value="149.99" required />
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Order</button>
+      </form>
+    </section>
+
+    <!-- Orders Table Section -->
+    <section class="card table-card">
+      <div class="table-header">
+        <h2>📋 Live Orders List</h2>
+        <button class="btn btn-secondary" onclick="fetchOrders()">🔄 Refresh</button>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Customer</th>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Total ($)</th>
+              <th>Status</th>
+              <th>Created At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody">
+            <tr>
+              <td colspan="8" class="text-center">Loading orders...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
